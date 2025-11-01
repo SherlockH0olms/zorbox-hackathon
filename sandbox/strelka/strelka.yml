@@ -1,0 +1,15 @@
+server:
+  address: "0.0.0.0:33907"
+
+scanners:
+  - ScanHash
+  - ScanEntropy
+  - ScanYara
+  - ScanPe
+  - ScanZip
+  - ScanRar
+  - ScanJavascript
+  - ScanPdf
+
+yara:
+  rules_directory: "/etc/strelka/rules/"
