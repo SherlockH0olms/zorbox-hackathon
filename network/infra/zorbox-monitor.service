@@ -1,0 +1,13 @@
+[Unit]
+Description=ZORBOX Network Monitor for %i
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/home/<user>/zorbox/network/monitor.py --job-id %i
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
