@@ -1,0 +1,13 @@
+# Certificates and secrets
+certs/
+*.pem
+*.key
+
+# Logs
+/var/log/
+/tmp/
+
+# Python
+__pycache__/
+*.pyc
+.env
