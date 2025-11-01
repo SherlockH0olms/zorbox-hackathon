@@ -1,0 +1,16 @@
+# ZORBOX IDS Rules
+
+# Suspicious outbound connections
+alert tcp $ANALYSIS_NET any -> $EXTERNAL_NET any (msg:"Outbound connection from sandbox"; sid:1000001;)
+
+# Known malware C2 domains
+alert dns $ANALYSIS_NET any -> any 53 (msg:"DNS query to suspicious domain"; content:"evil.com"; sid:1000002;)
+
+# IRC Communication
+alert tcp $ANALYSIS_NET any -> $EXTERNAL_NET 6667 (msg:"IRC connection attempt"; sid:1000003;)
+
+# Tor usage
+alert tcp $ANALYSIS_NET any -> $EXTERNAL_NET 9001 (msg:"Tor connection attempt"; sid:1000004;)
+
+# Large data exfiltration
+alert tcp $ANALYSIS_NET any -> $EXTERNAL_NET any (msg:"Large outbound data transfer"; dsize:>100000; sid:1000005;)
