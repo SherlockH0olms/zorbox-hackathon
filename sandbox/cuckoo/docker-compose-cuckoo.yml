@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  cuckoo:
+    image: blacktop/cuckoo:latest
+    container_name: cuckoo-sandbox
+    networks:
+      - analysis_net
+    volumes:
+      - ./cuckoo-data:/cuckoo
+      - analysis_files:/samples
+    environment:
+      - CUCKOO_DB_HOST=postgres
+      - CUCKOO_DB_PORT=5432
+    depends_on:
+      - postgres
+    command: daemon
+
+  cuckoo-api:
+    image: blacktop/cuckoo:latest
+    container_name: cuckoo-api
+    networks:
+      - analysis_net
+      - api_net
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./cuckoo-data:/cuckoo
+    command: api
+    depends_on:
+      - cuckoo

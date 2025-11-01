@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  cape:
+    image: capev2/cape:latest
+    container_name: cape-sandbox
+    networks:
+      - analysis_net
+    volumes:
+      - ./cape-data:/opt/CAPEv2
+      - analysis_files:/samples
+    environment:
+      - CAPE_DB_HOST=postgres
+    privileged: trues
