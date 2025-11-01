@@ -17,7 +17,6 @@ class CAPEClient:
             response = requests.post(url, files=files)
             
             if response.status_code == 200:
-                return response
                 return response.json().get('task_id')
             else:
                 raise Exception(f"CAPE submission failed: {response.text}")

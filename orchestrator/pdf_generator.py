@@ -38,12 +38,12 @@ class PDFReportGenerator:
         """
         PDF header
         """
-        # Title
+        # Titlel;
         title = Paragraph("🛡️ ZORBOX Analysis Report", self.title_style)
         self.story.append(title)
         self.story.append(Spacer(1, 0.2*inch))
         
-        # Metadata table
+        # Metadata cedveli
         metadata = [
             ['File Name:', report_data.get('file_name', 'N/A')],
             ['SHA-256 Hash:', report_data.get('file_hash', 'N/A')],
@@ -75,7 +75,7 @@ class PDFReportGenerator:
         risk_score = report_data.get('final_risk_score', 0)
         risk_level = report_data.get('final_risk_level', 'UNKNOWN')
         
-        # Risk level color
+        # Risk level reng
         risk_colors = {
             'LOW': colors.green,
             'MEDIUM': colors.orange,
@@ -111,7 +111,7 @@ class PDFReportGenerator:
         heading = Paragraph("Static Analysis", self.heading_style)
         self.story.append(heading)
         
-        # YARA matches
+        # YARA match
         yara_matches = static_data.get('yara_matches', [])
         if yara_matches:
             yara_text = Paragraph(f"<b>YARA Signatures:</b> {', '.join(yara_matches)}", self.styles['Normal'])
@@ -137,7 +137,7 @@ class PDFReportGenerator:
         heading = Paragraph("Sandbox Analysis", self.heading_style)
         self.story.append(heading)
         
-        # Network activity
+        # Network activty
         network = "Yes" if sandbox_data.get('network_activity', False) else "No"
         network_text = Paragraph(f"<b>Network Activity:</b> {network}", self.styles['Normal'])
         self.story.append(network_text)
@@ -147,7 +147,7 @@ class PDFReportGenerator:
         file_text = Paragraph(f"<b>File Modifications:</b> {file_mods}", self.styles['Normal'])
         self.story.append(file_text)
         
-        # Suspicious behaviors
+        # Suspicious behavours
         behaviors = sandbox_data.get('suspicious_behaviors', [])
         if behaviors:
             self.story.append(Paragraph("<b>Suspicious Behaviors:</b>", self.styles['Normal']))
@@ -170,7 +170,7 @@ class PDFReportGenerator:
         ai_text = Paragraph(f"<b>AI Score:</b> {ai_score}/100 (Confidence: {confidence:.1f}%)", self.styles['Normal'])
         self.story.append(ai_text)
         
-        # Explanation
+        # Explanatins
         explanation = ai_data.get('explanation', [])
         if explanation:
             self.story.append(Paragraph("<b>Analysis Explanation:</b>", self.styles['Normal']))
@@ -198,7 +198,7 @@ class PDFReportGenerator:
         if 'ai_scoring' in report_data:
             self.add_ai_analysis(report_data['ai_scoring'])
         
-        # Build PDF
+        # Build pdf
         self.doc.build(self.story)
 
 def generate_pdf_report(report_json, output_path):

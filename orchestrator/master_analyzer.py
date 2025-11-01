@@ -25,7 +25,7 @@ class MasterAnalyzer:
         try:
             print(f"[Strelka] Analyzing {file_path}...")
             
-            # Strelka client çağır
+            # Strelka client çağır;r;q burda
             cmd = [
                 'python3', '/app/sandbox/strelka/strelka_client.py',
                 file_path
@@ -89,7 +89,7 @@ class MasterAnalyzer:
             client = CAPEClient()
             
             task_id = client.submit_file(file_path)
-            # CAPE daha uzun vaxt aparır, async qaytar
+            # async qaytar
             return {'task_id': task_id, 'status': 'submitted'}
             
         except Exception as e:
@@ -109,7 +109,7 @@ class MasterAnalyzer:
                 executor.submit(self.analyze_with_strelka, file_path): 'strelka',
                 executor.submit(self.analyze_with_native_engine, file_path): 'native_engine',
                 executor.submit(self.analyze_with_cuckoo, file_path): 'cuckoo',
-                # CAPE-i MVP üçün opsional saxla (vaxt aparır)
+                # CAPE
                 # executor.submit(self.analyze_with_cape, file_path): 'cape'
             }
             
@@ -145,7 +145,7 @@ class MasterAnalyzer:
                 'hashes': strelka.get('hashes', {})
             }
         
-        # Native Engine nəticələri
+        # Native Engine nəticelei
         if 'native_engine' in self.results and 'error' not in self.results['native_engine']:
             native = self.results['native_engine']
             aggregated['static_analysis'].update({
@@ -161,7 +161,7 @@ class MasterAnalyzer:
                 'suspicious_behaviors': native.get('suspicious_behaviors', [])
             }
         
-        # Cuckoo nəticələri
+        # Cuckoo nəticelei
         if 'cuckoo' in self.results and 'error' not in self.results['cuckoo']:
             cuckoo = self.results['cuckoo']
             aggregated['sandbox_analysis'].update({
@@ -212,11 +212,11 @@ class MasterAnalyzer:
             'final_risk_level': 'UNKNOWN'
         }
         
-        # Final risk calculation
+        # Final risk calcul
         ai_score = ai_results.get('ai_score', 0)
         sandbox_score = aggregated_results.get('sandbox_analysis', {}).get('risk_score', 0)
         
-        # Weighted average: 60% rule-based (sandbox), 40% AI
+        # Weighted avger 60% rule-based (sandbox), 40% AI
         final_score = int(0.6 * sandbox_score + 0.4 * ai_score)
         report['final_risk_score'] = final_score
         
