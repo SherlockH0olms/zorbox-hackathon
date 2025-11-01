@@ -1,0 +1,10 @@
+# ZORBOX IDS Rules for Sandbox Network
+alert tcp 172.20.30.0/24 any -> any any (msg:"Outbound connection from sandbox"; sid:1000001;)
+alert dns 172.20.30.0/24 any -> any 53 (msg:"DNS query to suspicious domain"; content:"evil.com"; sid:1000002;)
+alert tcp 172.20.30.0/24 any -> any 6667 (msg:"IRC connection attempt"; sid:1000003;)
+alert tcp 172.20.30.0/24 any -> any 9001 (msg:"Tor connection attempt"; sid:1000004;)
+alert tcp 172.20.30.0/24 any -> any any (msg:"Large outbound data transfer"; dsize:>100000; sid:1000005;)
+alert http 172.20.30.0/24 any -> any any (msg:"Suspicious HTTP POST"; method:POST; content:"base64"; sid:1000006;)
+alert http 172.20.30.0/24 any -> any any (msg:"Malware user-agent detected"; content:"User-Agent|3a| WinHttp"; sid:1000007;)
+alert tcp 172.20.30.0/24 any -> any 3333 (msg:"Cryptomining pool connection"; sid:1000008;)
+alert tcp 172.20.30.0/24 any -> any 4444 (msg:"Cryptomining pool connection"; sid:1000009;)
