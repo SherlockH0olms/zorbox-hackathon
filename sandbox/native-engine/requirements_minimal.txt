@@ -1,0 +1,16 @@
+﻿# Core (mutlaka gerekli)
+pefile==2023.2.7
+requests==2.31.0
+redis==5.0.1
+psutil==5.9.5
+colorlog==6.7.0
+
+# Archive handling
+py7zr==0.20.6
+rarfile==4.1
+
+# Network (opsiyonel ama yararlı)
+dpkt==1.9.8
+
+# Testing
+pytest==7.4.3

@@ -1,0 +1,39 @@
+﻿# ZORBOX Native Engine Requirements
+# Python 3.9+
+
+# Core analysis libraries
+pefile==2023.2.7
+python-magic==0.4.27
+yara-python==4.3.1
+
+# Archive handling
+py7zr==0.20.6
+rarfile==4.1
+
+# Hash & crypto
+hashlib-additional==1.0
+
+# String & pattern matching
+regex==2023.10.3
+
+# System monitoring (strace/ptrace integration)
+python-ptrace==0.9.8
+psutil==5.9.5
+
+# Network analysis
+scapy==2.5.0
+dpkt==1.9.8
+
+# Logging
+colorlog==6.7.0
+
+# Data structures
+dataclasses-json==0.6.1
+
+# API integration
+requests==2.31.0
+redis==5.0.1
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
