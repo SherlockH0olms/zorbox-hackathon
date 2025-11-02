@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sandboxdb
+    username: postgres
+    password: 12345
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+sandbox:
+  api:
+    url: https://sandbox-api.internal
+
+ai:
+  provider: deepseek
+  api:
+    url: https://api.deepseek.com/v1/chat/completions
+    key: sk-49cba976ce3b46f2b131f34fd519c73f
+    model: deepseek-chat
