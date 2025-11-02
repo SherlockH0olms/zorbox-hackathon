@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="az">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ZorBox — Analysis UI (MVP)</title>
+    <style>
+        :root{
+            --bg:#0f1724; --card:#0b1220; --accent:#7dd3fc; --muted:#9aa6b2;
+            --positive:#10b981; --danger:#ef4444;
+            font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+        body{background:linear-gradient(180deg,#061022 0%, #081227 100%); color:#e6eef6; margin:0; padding:24px;}
+        .container{max-width:900px;margin:0 auto;}
+        header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+        h1{font-size:20px;margin:0}
+        .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:18px; border-radius:12px; box-shadow:0 6px 18px rgba(2,6,23,0.6); margin-bottom:16px}
+        form .row{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+        label{font-size:13px;color:var(--muted)}
+        input[type="text"], input[type="password"]{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 12px;border-radius:8px;color:inherit;min-width:240px}
+        input[type="file"]{color:var(--muted)}
+        button{background:var(--accent);color:#04202b;border:0;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+        button:disabled{opacity:0.6;cursor:not-allowed}
+        .muted{color:var(--muted);font-size:13px;margin-top:6px}
+        .progress{height:10px;background:rgba(255,255,255,0.04);border-radius:8px;overflow:hidden;margin-top:8px}
+        .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+        pre{background:rgba(0,0,0,0.25);padding:12px;border-radius:8px;overflow:auto;color:#dff; font-size:13px}
+        .status{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700}
+        .status.low{background:rgba(16,185,129,0.12);color:var(--positive)}
+        .status.medium{background:rgba(250,204,21,0.12);color:#f59e0b}
+        .status.high{background:rgba(239,68,68,0.08);color:var(--danger)}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        @media (max-width:720px){.grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24'%3E%3Cpath fill='%237dd3fc' d='M12 2L2 7l10 5 10-5-10-5zm0 7.5L6 7l6-3 6 3-6 2.5z'/%3E%3C/svg%3E" alt="logo">
+        <div>
+            <h1>ZorBox — Quick Analysis (MVP)</h1>
+            <div class="muted">File upload or URL → sandbox + AI → aggregated result</div>
+        </div>
+    </header>
+
+    <section class="card">
+        <form id="analyzeForm">
+            <div class="row">
+                <label for="file">File (max 10MB)</label>
+                <input id="file" name="file" type="file" />
+                <span class="muted">və ya</span>
+                <label for="url">URL</label>
+                <input id="url" name="url" type="text" placeholder="https://example.com/malicious.docx" />
+            </div>
+
+            <div class="row" id="passwordRow" style="display:none">
+                <label for="password">Archive / Protected file password</label>
+                <input id="password" name="password" type="password" placeholder="enter password if required" />
+                <div class="muted">Tələb olunarsa, şifrəni daxil edin. (zip/rar/7z/docx və s.)</div>
+            </div>
+
+            <div class="row">
+                <button id="submitBtn" type="submit">Start Analysis</button>
+                <div id="jobInfo" class="muted" style="margin-left:12px"></div>
+            </div>
+
+            <div class="progress" style="display:none" id="uploadProgress">
+                <i id="uploadBar"></i>
+            </div>
+
+            <div id="message" class="muted" style="margin-top:8px"></div>
+        </form>
+    </section>
+
+    <section class="card" id="resultCard" style="display:none">
+        <h3>Result</h3>
+        <div class="grid">
+            <div>
+                <div><strong>File:</strong> <span id="resFile">—</span></div>
+                <div><strong>SHA256:</strong> <span id="resSha">—</span></div>
+                <div><strong>MIME:</strong> <span id="resMime">—</span></div>
+                <div style="margin-top:8px"><strong>AI Score:</strong> <span id="resAi">—</span></div>
+                <div><strong>Final Score:</strong> <span id="resFinal">—</span></div>
+                <div style="margin-top:8px"><strong>Risk:</strong> <span id="resRisk" class="status">—</span></div>
+            </div>
+
+            <div>
+                <div><strong>Summary</strong></div>
+                <div id="resSummary" class="muted" style="margin-top:6px">—</div>
+            </div>
+        </div>
+
+        <div style="margin-top:12px">
+            <strong>Full JSON</strong>
+            <pre id="resJson">{}</pre>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    (function(){
+        // Allowed / MUST-HAVE extensions for password prompting (lowercase, no dot)
+        const PASSWORD_EXT = new Set(['exe','dll','ps1','js','docx','xls','ppt','zip','rar','7z']);
+        const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+
+        const fileInput = document.getElementById('file');
+        const urlInput = document.getElementById('url');
+        const passwordRow = document.getElementById('passwordRow');
+        const passwordInput = document.getElementById('password');
+        const form = document.getElementById('analyzeForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const uploadBar = document.getElementById('uploadBar');
+        const message = document.getElementById('message');
+        const jobInfo = document.getElementById('jobInfo');
+
+        const resultCard = document.getElementById('resultCard');
+        const resFile = document.getElementById('resFile');
+        const resSha = document.getElementById('resSha');
+        const resMime = document.getElementById('resMime');
+        const resAi = document.getElementById('resAi');
+        const resFinal = document.getElementById('resFinal');
+        const resRisk = document.getElementById('resRisk');
+        const resSummary = document.getElementById('resSummary');
+        const resJson = document.getElementById('resJson');
+
+        function getExtFromName(name){
+            if(!name) return '';
+            const idx = name.lastIndexOf('.');
+            if(idx < 0) return '';
+            return name.slice(idx+1).toLowerCase();
+        }
+
+        function checkPasswordNeededByFile(file){
+            const ext = getExtFromName(file?.name || '');
+            return PASSWORD_EXT.has(ext);
+        }
+        function checkPasswordNeededByUrl(url){
+            try{
+                const pathname = new URL(url).pathname;
+                const ext = getExtFromName(pathname);
+                return PASSWORD_EXT.has(ext);
+            }catch(e){
+                return false;
+            }
+        }
+
+        fileInput.addEventListener('change', () => {
+            const f = fileInput.files[0];
+            message.textContent = '';
+            if(!f) {
+                passwordRow.style.display = 'none';
+                return;
+            }
+            if(f.size > MAX_SIZE){
+                message.style.color = 'var(--danger)';
+                message.textContent = 'Error: File exceeds 10 MB limit. Choose smaller file.';
+                fileInput.value = '';
+                passwordRow.style.display = 'none';
+                return;
+            }
+            if(checkPasswordNeededByFile(f)){
+                passwordRow.style.display = 'flex';
+            } else {
+                passwordRow.style.display = 'none';
+            }
+        });
+
+        urlInput.addEventListener('input', () => {
+            const url = urlInput.value.trim();
+            if(!url){
+                if(!fileInput.files[0]) passwordRow.style.display = 'none';
+                return;
+            }
+            if(checkPasswordNeededByUrl(url)){
+                passwordRow.style.display = 'flex';
+            } else {
+                if(!fileInput.files[0]) passwordRow.style.display = 'none';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            message.style.color = 'var(--muted)';
+            message.textContent = '';
+
+            const file = fileInput.files[0];
+            const url = urlInput.value?.trim();
+            const password = passwordInput.value?.trim();
+
+            if(!file && !url){
+                message.style.color = 'var(--danger)';
+                message.textContent = 'Provide a file or a URL.';
+                return;
+            }
+            if(file && file.size > MAX_SIZE){
+                message.style.color = 'var(--danger)';
+                message.textContent = 'File too large (10MB).';
+                return;
+            }
+            // If password is visible and required but not provided -> warn
+            if((file && checkPasswordNeededByFile(file) || (url && checkPasswordNeededByUrl(url))) && (!password)){
+                message.style.color = 'var(--danger)';
+                message.textContent = 'Password required for this file type. Enter password.';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            uploadProgress.style.display = 'block';
+            uploadBar.style.width = '0%';
+            resultCard.style.display = 'none';
+            jobInfo.textContent = '';
+            resJson.textContent = '{}';
+
+            try {
+                // Use XHR to show upload progress
+                const xhr = new XMLHttpRequest();
+                const fd = new FormData();
+                if(file) fd.append('file', file);
+                if(url) fd.append('url', url);
+                if(password) fd.append('password', password);
+
+                xhr.open('POST', '/api/v1/analysis', true);
+
+                xhr.upload.onprogress = function(ev){
+                    if(ev.lengthComputable){
+                        const pct = Math.round((ev.loaded / ev.total) * 100);
+                        uploadBar.style.width = pct + '%';
+                    } else {
+                        uploadBar.style.width = '50%';
+                    }
+                };
+
+                xhr.onreadystatechange = function(){
+                    if(xhr.readyState === 4){
+                        uploadBar.style.width = '100%';
+                        submitBtn.disabled = false;
+                        if(xhr.status >= 200 && xhr.status < 300){
+                            try {
+                                const data = JSON.parse(xhr.responseText || '{}');
+                                showResult(data);
+                            } catch (err) {
+                                message.style.color = 'var(--danger)';
+                                message.textContent = 'Invalid JSON response from server.';
+                            }
+                        } else {
+                            // try to parse error message
+                            let errMsg = 'Server error: ' + xhr.status;
+                            try {
+                                const err = JSON.parse(xhr.responseText || '{}');
+                                if(err.message) errMsg = err.message;
+                            } catch(e){}
+                            message.style.color = 'var(--danger)';
+                            message.textContent = errMsg;
+                        }
+                    }
+                };
+
+                xhr.onerror = function(){
+                    uploadBar.style.width = '0%';
+                    submitBtn.disabled = false;
+                    message.style.color = 'var(--danger)';
+                    message.textContent = 'Network error while uploading.';
+                };
+
+                xhr.send(fd);
+                message.style.color = 'var(--muted)';
+                message.textContent = 'Uploading...';
+            } catch (err) {
+                submitBtn.disabled = false;
+                uploadProgress.style.display = 'none';
+                message.style.color = 'var(--danger)';
+                message.textContent = 'Unexpected error: ' + err.message;
+            }
+        });
+
+        function showResult(data){
+            uploadProgress.style.display = 'none';
+            resultCard.style.display = 'block';
+            // populate fields — tolerant to missing keys
+            resFile.textContent = data.fileName || data.filename || '—';
+            resSha.textContent = data.sha256 || '—';
+            resMime.textContent = data.mime || '—';
+            resAi.textContent = (typeof data.aiScore !== 'undefined') ? data.aiScore : (data.ai_score ?? '—');
+            resFinal.textContent = (typeof data.finalScore !== 'undefined') ? data.finalScore : (data.final_score ?? '—');
+
+            const risk = (data.riskLevel || data.risk_level || '—').toString();
+            resRisk.textContent = risk;
+            resRisk.className = 'status ' + (risk.toLowerCase().startsWith('low') ? 'low' : (risk.toLowerCase().startsWith('medium') ? 'medium' : (risk.toLowerCase().startsWith('critical') || risk.toLowerCase().startsWith('high') ? 'high' : '')));
+
+            resSummary.textContent = data.summary || data.summaryText || '—';
+            resJson.textContent = JSON.stringify(data, null, 2);
+
+            message.style.color = 'var(--muted)';
+            message.textContent = 'Analysis complete.';
+        }
+
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/backend_nexora/backend_nexora.iml" filepath="$PROJECT_DIR$/backend_nexora/backend_nexora.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/zorbox-hackathon.iml" filepath="$PROJECT_DIR$/.idea/zorbox-hackathon.iml" />
+    </modules>
+  </component>
+</project>
